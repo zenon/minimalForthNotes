@@ -1,7 +1,7 @@
-Notes about Minimal Forth
+Minimal Forth, Notes.
 
 It is based on an paper by Peter Knaggs and Paul E. Bennet from Autumn 2015
-http://www.complang.tuwien.ac.at/anton/euroforth/ef15/papers/knaggs.pdf,
+http://www.complang.tuwien.ac.at/anton/euroforth/ef15/papers/knaggs.pdf.
 Ulrich Hoffmann of the University of Applied Science in Wedel (near Hamburg, Europe)
 implemented the Minimal Forth Workbench
 http://theforth.net/package/minimal
@@ -9,79 +9,113 @@ http://theforth.net/package/minimal
 To summarize, I'm utterly enthusiastic about it.
 
 
+| word          | stack                | primitive? | category | made of                       | description             |
+|---------------+----------------------+------------+----------+-------------------------------+-------------------------|
+| OVER          | X1 X2 -- X1 X2 X1    | prim       | stack    |                               |                         |
+| DROP          | X --                 | prim       | stack    |                               |                         |
+| SWAP          | X1 X2 -- X2 X1       | prim       | stack    |                               |                         |
+| ROT           | X1 X2 X3 -- X2 X3 X1 | sec        | stack    | >R R> SWAP                    |                         |
+| DUP           | X1 -- X1 X1          | sec        | stack    | >R R@ R>                      |                         |
+| <             | N N -- F             | prim       | arith    |                               |                         |
+| -             | N N -- N             | prim       | arith    |                               |                         |
+| */MOD         | N1 N2 N3 -- N4 N5    | prim       | arith    |                               | N1*N2 = N3*N5+N4        |
+| >             | N N -- F             | sec        | arith    | SWAP <                        |                         |
+| =             | N N -- F             | sec        | arith    | - 0=                          |                         |
+| 0=            | X -- F               | sec        | arith    | IF FALSE ELSE TRUE THEN       |                         |
+| MOD           | N N -- N             | sec        | arith    | 1 SWAP */MOD DROP             |                         |
+| 2*            | N N -- N             | sec        | arith    | DUP +                         |                         |
+| slash, i.e. / | N N -- N             | sec        | arith    | 1 SWAP */MOD SWAP DROP        |                         |
+| *             | N N -- N             | sec        | arith    | 1 */MOD SWAP DROP             |                         |
+| +             | N N -- N             | sec        | arith    | SWAP -                        |                         |
+| 2/            | X1 -- X2             | sec        | arith    | DUP +                         |                         |
+| FALSE         |                      | sec        | bool     | CONSTANT 0                    | all bits off, i.e. 0    |
+| TRUE          |                      | sec        | bool     | CONSTANT INVERT FALSE         | all bits on, i.e. -1    |
+| RSHIFT        | X1 U -- X2           | prim       | bool     |                               |                         |
+| LSHIFT        | X1 U -- X2           | sec        | bool     | uses a while loop             |                         |
+| INVERT        | X -- X               | prim       | bool     |                               | all bits inverted       |
+| AND           | X X -- X             | prim       | bool     |                               |                         |
+| XOR           | X X -- X             | sec        | bool     | OVER INVERT AND >R SWAP R> OR |                         |
+| OR            | X X -- X             | sec        | bool     | SWAP INVERT AND               |                         |
+| R>            | -- X                 | prim       | r-stack  |                               |                         |
+| R@            | -- X                 | prim       | r-stack  | same as R> dup >R             |                         |
+| >R            | X --                 | prim       | r-stack  |                               |                         |
+| CREATE        |                      | a-prim     | defining |                               |                         |
+| CONSTANT      | X "<Spaces>Name" --  | sec        | defining | CREATE , DOES> @              |                         |
+| VARIABLE      | "<Spaces>Name" --    | sec        | defining | CREATE ,                      |                         |
+| ;             |                      | prim       | defining |                               |                         |
+| :             |                      | a-prim     | defining |                               |                         |
+| DOES>         |                      | prim       | defining |                               |                         |
+| primitive     |                      |            |          |                               |                         |
+| INCLUDE       |                      | ?          |          |                               | include file.fs (no "") |
+| \             |                      | prim       | syntax   |                               |                         |
+| (             |                      | prim       | syntax   |                               |                         |
+| CR            |                      | prim       | IO       |                               |                         |
+| KEY?          |                      | prim       | IO       |                               |                         |
+| EMIT          |                      | prim       | IO       |                               |                         |
+| KEY           |                      | prim       | IO       |                               |                         |
+| '             |                      | prim       | control  |                               |                         |
+| EXECUTE       |                      | prim       | control  |                               |                         |
+| I             |                      | prim       | control  |                               |                         |
+| J             |                      | prim       | control  |                               |                         |
+| LOOP          |                      | prim       | control  |                               |                         |
+| UNTIL         |                      | prim       | control  |                               |                         |
+| AGAIN         |                      | prim       | control  |                               |                         |
+| BEGIN         |                      | prim       | control  |                               |                         |
+| DO            |                      | prim       | control  |                               |                         |
+| REPEAT        |                      | prim       | control  |                               |                         |
+| WHILE         |                      | prim       | control  |                               |                         |
+| THEN          |                      | prim       | control  |                               |                         |
+| IF            |                      | prim       | control  |                               |                         |
+| ELSE          |                      | prim       | control  |                               |                         |
+| CELL+         | addr1 -- addr2       | sec        | memory   | 1 CELLS +                     |                         |
+| ALIGNED       | addr -- a-addr       | sec        | memory   | CELL+ 1 - CELLS INVERT AND    |                         |
+| CHAR+         | c-addr1 -- c-addr2   | sec        | memory   | 1 CHARS +                     |                         |
+| CHARS         |                      | prim       | memory   |                               |                         |
+| CALIGNED      |                      | a-prim     | memory   |                               |                         |
+| CALIGN        |                      | a-prim     | memory   |                               |                         |
+| C@            |                      | prim       | memory   |                               |                         |
+| C,            |                      | prim       | memory   |                               |                         |
+| C!            |                      | prim       | memory   |                               |                         |
+| CELLS         |                      | prim       | memory   |                               |                         |
+| ALIGN         |                      | prim       | memory   |                               |                         |
+| @             |                      | prim       | memory   |                               |                         |
+| ,             |                      | prim       | memory   |                               |                         |
+| !             |                      | prim       | memory   |                               |                         |
+| WORDS         |                      |            | util     |                               |                         |
+| .S            |                      | prim       | util     |                               |                         |
+| bye           |                      |            | util     |                               |                         |
 
-| word          | primitive? | category | description          |
-|---------------+------------+----------+----------------------|
-| TRUE          | sec        | const    | all bits on, i.e. -1 |
-| FALSE         | sec        | const    | all bits off, i.e. 0 |
-| OVER          | prim       | stack    |                      |
-| DROP          | prim       | stack    |                      |
-| SWAP          | prim       | stack    |                      |
-| ROT           | sec        | stack    |                      |
-| DUP           | sec        | stack    |                      |
-| >             | sec        | arith    |                      |
-| =             | sec        | arith    |                      |
-| 0=            | sec        | arith    |                      |
-| MOD           | sec        | arith    |                      |
-| 2*            | sec        | arith    |                      |
-| slash, i.e. / | sec        | arith    |                      |
-| *             | sec        | arith    |                      |
-| +             | sec        | arith    |                      |
-| <             | prim       | arith    |                      |
-| -             | prim       | arith    |                      |
-| */MOD         | prim       | arith    |                      |
-| 2/            | sec        | arith    |                      |
-| LSHIFT        | sec        | bool     |                      |
-| XOR           | sec        | bool     |                      |
-| OR            | sec        | bool     |                      |
-| AND           | prim       | bool     |                      |
-| R>            | prim       | r-stack  |                      |
-| R@            | prim       | r-stack  |                      |
-| >R            | prim       | r-stack  |                      |
-| VARIABLE      | sec        |          |                      |
-| CONSTANT      | sec        |          |                      |
-| primitive     | ??         |          |                      |
-| WORDS         | ??         |          |                      |
-| INCLUDE       | ?          |          |                      |
-| ALIGNED       | sec        |          |                      |
-| CELL+         | sec        |          |                      |
-| CHAR+         | sec        |          |                      |
-| \             | prim       |          |                      |
-| .S            | prim       |          |                      |
-| (             | prim       |          |                      |
-| CR            | prim       |          |                      |
-| KEY?          | prim       |          |                      |
-| EMIT          | prim       |          |                      |
-| KEY           | prim       |          |                      |
-| DOES>         | prim       |          |                      |
-| ;             | prim       |          |                      |
-| CREATE        | ap?        |          |                      |
-| :             | ap?        |          |                      |
-| EXECUTE       | prim       |          |                      |
-| I             | prim       |          |                      |
-| J             | prim       |          |                      |
-| LOOP          | prim       |          |                      |
-| UNTIL         | prim       |          |                      |
-| AGAIN         | prim       |          |                      |
-| BEGIN         | prim       |          |                      |
-| ELSE          | prim       |          |                      |
-| '             | prim       |          |                      |
-| DO            | prim       |          |                      |
-| REPEAT        | prim       |          |                      |
-| WHILE         | prim       |          |                      |
-| THEN          | prim       |          |                      |
-| IF            | prim       |          |                      |
-| RSHIFT        | prim       |          |                      |
-| INVERT        | prim       |          |                      |
-| CHARS         | prim       |          |                      |
-| CALIGNED      | ap?        |          |                      |
-| CALIGN        | ap?        |          |                      |
-| C@            | prim       |          |                      |
-| C,            | prim       |          |                      |
-| C!            | prim       |          |                      |
-| CELLS         | prim       |          |                      |
-| ALIGN         | prim       |          |                      |
-| @             | prim       |          |                      |
-| ,             | prim       |          |                      |
-| !             | prim       |          |                      |
-| bye           | ?          |          |                      |
+Notes:
+- a-prim are declared using the word ANOTHER-PRIMITIVE
+
+
+What I missed: ENDIF NEGATE . SEE RECURSE
+
+( Note that I lack experience in Forth, so don't expect quality code .. )
+: NEGATE 0 swap - ;
+( defining an own base is not the best idea, as the reader can't know it. )
+variable base
+10 base !
+: decimal 10 base ! ; ( assumes decimal at compile time )
+: hex 16 base ! ;     ( assumes decimal at compile time )
+: .digit dup 10 < if '0 else 'A 10 - then + emit ;
+( . can't handle negative numbers yet )
+: . 0 >r begin r> 1 + >r 1 swap base @ */mod dup 0= invert while repeat drop 
+    begin r> dup 1 - >r 0= invert while .digit repeat r> drop ;
+
+Can't implement this:
+
+: ENDIF postpone then ; immediate
+
+
+TODO
+
+- /MOD
+- 2drop, ..
+- nip, tuck  ( see stack.fs )
+
+
+Questions
+- I once read somebody reporting enthusiastically about implementing
+  comments in Forth. Could we do that?
+- Do ALL words have a fixed number of args? (like in Shen)
