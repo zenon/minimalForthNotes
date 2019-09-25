@@ -9,6 +9,9 @@ http://theforth.net/package/minimal
 
 To summarize, I'm utterly enthusiastic about it.
 
+Ehm, I suggest to view this file in an org-mode aware system, or as raw file. Githubs formatting doesn't
+render as intended.
+
 * Words
 
 | word          | stack                | primitive? | category | made of                       | description                |
@@ -92,7 +95,7 @@ Notes:
 
 * More words
 
-What I missed: NEGATE .
+Implement . from the minimum:
 
 ( Note that I lack experience in Forth, so don't expect quality code .. )
 : NEGATE ( -- ) 0 swap - ;
@@ -103,7 +106,7 @@ variable base
 : decimal 10 base ! ; ( assumes decimal at compile time )
 : hex 16 base ! ;     ( assumes decimal at compile time )
 
-\ implementing .
+\ implementing . cf. numeric-output.fs for a more professional version
 \ .digit writes one digit ( from 0 to Z)
 : .digit ( n -- ) dup 10 < if '0 else 'A 10 - then + emit ; ( no range control )
 \ digits takes an int, assuming positivity, puts the digits on stack, largest on top,
@@ -115,6 +118,7 @@ variable base
 \ print a number
 : . ( n -- ) negative if '- emit negate then digits .digits ;
 
+\ cf double.fd for a more professional version, especially 2dup is muuuuuch simpler
 : 2dup swap dup >r swap dup r> swap ;
 : 2swap rot >r rot r> ;
 
@@ -126,10 +130,15 @@ Can't implement this:
 
 recurse ?
 
+ALLOT is used in defining-words and numeric-output.fd, but it's not so difficult to implement. We need
+- HERE, which in turn needs the variable DP
+- and, if we want to be careful, we need to check the available space
+
+
 Open
 
 - /MOD
-- 2drop, ..
+
 
 * Questions
 - I once read somebody reporting enthusiastically about implementing
